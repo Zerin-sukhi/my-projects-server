@@ -1,138 +1,141 @@
-const express = require('express')
-const app = express()
-const cors=require('cors');
-require('dotenv').config()
-const { MongoClient } = require('mongodb');
-const fileUpload = require('express-fileupload');
+const express = require("express");
+const app = express();
+const cors = require("cors");
+require("dotenv").config();
+const { MongoClient } = require("mongodb");
+const fileUpload = require("express-fileupload");
 
-// const path = require('path'); 
+// const path = require('path');
 // const nodemailer = require('nodemailer');
 // const buildPath = path.join(__dirname, '..', 'build');
-// app.use(express.static(buildPath)); 
+// app.use(express.static(buildPath));
 //gubStudent
-//g2jIaTIMebPhbbmA      
+//g2jIaTIMebPhbbmA
 const port = process.env.PORT || 5000;
- 
+
 app.use(cors());
 app.use(express.json());
 app.use(fileUpload());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.os8em.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+const client = new MongoClient(uri, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 
-// 
-async function run(){
-try{
+async function run() {
+  try {
     await client.connect();
     //console.log('connected successfully');
-    const database= client.db('students_association');
-    const meetingCollection= database.collection('meetings');
-    const usersCollection= database.collection('users');
-    const donatorCollection = database.collection('donators');
-    const booksCollection= database.collection('books');
-    const computerCollection = database.collection('computer');
+    const database = client.db("students_association");
+    const meetingCollection = database.collection("meetings");
+    const usersCollection = database.collection("users");
+    const donatorCollection = database.collection("donators");
+    const booksCollection = database.collection("books");
+    const computerCollection = database.collection("computer");
 
-    app.get('/meetings', async(req,res)=>{
+    app.get("/meetings", async (req, res) => {
       const email = req.query.email;
-      const date= new Date(req.query.date).toLocaleDateString();
+      const date = new Date(req.query.date).toLocaleDateString();
       //console.log(date);
-      const query = {email: email, date: date}
+      const query = { email: email, date: date };
       const cursor = meetingCollection.find(query);
       const meetings = await cursor.toArray();
       res.json(meetings);
-    })
-
-    app.get('/allMember', async(req,res)=>{
-      const result = await meetingCollection.find({}).toArray();
-      res.send(result);
-    })
-
-    app.post('/meetings',async(req,res)=>{
-      const meeting = req.body;
-      const result=await meetingCollection.insertOne(meeting);
-      //console.log(result);
-      res.json(result)
     });
 
-    app.post('/addBooks', async(req,res)=>{
-   console.log(req.body);
-   const result = await booksCollection.insertOne(req.body);
-   console.log(result);
-    })
+    app.get("/allMember", async (req, res) => {
+      const result = await meetingCollection.find({}).toArray();
+      res.send(result);
+    });
 
-    app.get('/allBooks', async(req,res)=>{
+    app.post("/meetings", async (req, res) => {
+      const meeting = req.body;
+      const result = await meetingCollection.insertOne(meeting);
+      //console.log(result);
+      res.json(result);
+    });
+
+    app.post("/addBooks", async (req, res) => {
+      console.log(req.body);
+      const result = await booksCollection.insertOne(req.body);
+      console.log(result);
+    });
+
+    app.get("/allBooks", async (req, res) => {
       const result = await booksCollection.find({}).toArray();
       res.send(result);
-    })
+    });
 
-    app.post('/addDonators', async(req,res)=>{
+    app.post("/addDonators", async (req, res) => {
       console.log(req.body);
       const result = await donatorCollection.insertOne(req.body);
       console.log(result);
-    })
-    app.get('/allDonators', async(req,res)=>{
-      const result= await donatorCollection.find({}).toArray();
+    });
+    app.get("/allDonators", async (req, res) => {
+      const result = await donatorCollection.find({}).toArray();
       res.send(result);
-    })
+    });
 
-    app.post('/addMembership',async(req,res)=>{
+    app.post("/addMembership", async (req, res) => {
       console.log(req.body);
       const result = await computerCollection.insertOne(req.body);
       console.log(result);
-    })
+    });
 
-    app.get('/users/:email', async (req,res)=>{
+    app.get("/users/:email", async (req, res) => {
       const email = req.params.email;
-      const query = {email: email};
+      const query = { email: email };
       const user = await usersCollection.findOne(query);
       let isAdmin = false;
-      if(user?.role === 'admin'){
-        isAdmin=true;
+      if (user?.role === "admin") {
+        isAdmin = true;
       }
-      res.json({admin: isAdmin});
-    })
+      res.json({ admin: isAdmin });
+    });
 
-    app.post('/users', async(req,res)=>{
+    app.post("/users", async (req, res) => {
       const user = req.body;
-      const result=await usersCollection.insertOne(user);
+      const result = await usersCollection.insertOne(user);
       console.log(result);
       res.json(result);
     });
 
-    app.post('/addNotice',(req,res)=>{
+    app.post("/addNotice", (req, res) => {});
 
-    });
-
-    app.put('/users', async(req,res)=>{
+    app.put("/users", async (req, res) => {
       const user = req.body;
       //console.log('put',user);
-      const filter = {email: user.email};
+      const filter = { email: user.email };
       const options = { upsert: true };
-      const updateDoc = {$set: user};
-      const result = await usersCollection.updateOne(filter, updateDoc, options);
+      const updateDoc = { $set: user };
+      const result = await usersCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
       res.json(result);
     });
 
-    app.put('/users/admin', async(req,res)=>{
+    app.put("/users/admin", async (req, res) => {
       const user = req.body;
-      console.log('put',user);
-      const filter = {email: user.email};
-      const updateDoc = {$set: {role: 'admin'}};
+      console.log("put", user);
+      const filter = { email: user.email };
+      const updateDoc = { $set: { role: "admin" } };
       const result = await usersCollection.updateOne(filter, updateDoc);
       res.json(result);
-    })
-}
-finally{
+    });
+  } finally {
     //await client.close();
-}
+  }
 }
 run().catch(console.dir);
 
-app.get('/', (req, res) => {
-  res.send('Hello gub students!')
-})
+app.get("/", (req, res) => {
+  res.send("Hello gub students!");
+});
 
 app.listen(port, () => {
-  console.log(`connect to port: ${port}`)
-})
+  console.log(`connect to port: ${port}`);
+});
