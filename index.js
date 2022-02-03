@@ -29,11 +29,13 @@ async function run() {
     await client.connect();
     //console.log('connected successfully');
     const database = client.db("students_association");
+    const servicesCollection = database.collection("services");
     const meetingCollection = database.collection("meetings");
     const usersCollection = database.collection("users");
     const donatorCollection = database.collection("donators");
     const booksCollection = database.collection("books");
     const computerCollection = database.collection("computer");
+    const reviewCollection = database.collection("review");
 
     app.get("/meetings", async (req, res) => {
       const email = req.query.email;
@@ -102,8 +104,6 @@ async function run() {
       res.json(result);
     });
 
-    app.post("/addNotice", (req, res) => {});
-
     app.put("/users", async (req, res) => {
       const user = req.body;
       //console.log('put',user);
@@ -125,6 +125,37 @@ async function run() {
       const updateDoc = { $set: { role: "admin" } };
       const result = await usersCollection.updateOne(filter, updateDoc);
       res.json(result);
+    });
+    // add rating/review
+    app.post("/addReview", async (req, res) => {
+      const result = await reviewCollection.insertOne(req.body);
+      res.send(result);
+    });
+    // get all review
+    app.get("/allReview", async (req, res) => {
+      const result = await reviewCollection.find({}).toArray();
+      res.send(result);
+      console.log(result);
+    });
+    // add service
+    app.post("/addServices", async (req, res) => {
+      const result = await servicesCollection.insertOne(req.body);
+      res.send(result);
+    });
+
+    // get all service
+    app.get("/allServices", async (req, res) => {
+      const result = await servicesCollection.find({}).toArray();
+      res.send(result);
+      console.log(result);
+    });
+
+    // get single service
+    app.get("/singleService/:id", async (req, res) => {
+      const result = await servicesCollection
+        .find({ _id: ObjectId(req.params.id) })
+        .toArray();
+      res.send(result[0]);
     });
   } finally {
     //await client.close();
