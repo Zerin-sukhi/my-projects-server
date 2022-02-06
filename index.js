@@ -36,6 +36,7 @@ async function run() {
     const booksCollection = database.collection("books");
     const computerCollection = database.collection("computer");
     const reviewCollection = database.collection("review");
+    const careerCollection = database.collection("career");
 
     app.get("/meetings", async (req, res) => {
       const email = req.query.email;
@@ -134,6 +135,18 @@ async function run() {
     // get all review
     app.get("/allReview", async (req, res) => {
       const result = await reviewCollection.find({}).toArray();
+      res.send(result);
+      console.log(result);
+    });
+    // add career
+    app.post("/addCareer", async (req, res) => {
+      const result = await careerCollection.insertOne(req.body);
+      res.send(result);
+    });
+
+    // get all career
+    app.get("/allCareer", async (req, res) => {
+      const result = await careerCollection.find({}).toArray();
       res.send(result);
       console.log(result);
     });
